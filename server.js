@@ -1,43 +1,41 @@
 const express = require('express');
-const mysql = require('mysql2');
-require('dotenv').config();
+const axios = require('axios');
+const cors = require('cors');
+require('dotenv').config(); // For using environment variables (API Key)
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-// MySQL database connection setup
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
+app.use(cors());
+app.use(express.json());
 
-// Connect to the database
-db.connect((err) => {
-  if (err) {
-    console.error('Error connecting to the database: ', err);
-    return;
+const API_KEY = 'c9567156fd4b439a9e09a9ca8197f360'; // Use the key you received
+
+// Endpoint to get geocode (lat, lng) from address
+app.post('/getCoordinates', async (req, res) => {
+  const { address } = req.body;
+
+  if (!address) {
+    return res.status(400).json({ error: 'Address is required' });
   }
-  console.log('Connected to the database');
-});
 
-// Middleware
-app.use(express.json()); // To parse JSON bodies
+  try {
+    const response = await axios.get(
+      `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(address)}&key=${API_KEY}`
+    );
 
-// Example route to fetch treatment centers
-app.get('/treatment-centers', (req, res) => {
-  const query = 'SELECT * FROM treatment_centers';
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching treatment centers: ', err);
-      return res.status(500).send('Error fetching data');
+    const data = response.data;
+    if (data.results.length > 0) {
+      const { lat, lng } = data.results[0].geometry;
+      res.json({ lat, lng });
+    } else {
+      res.status(404).json({ error: 'Address not found' });
     }
-    res.json(results); // Send results as JSON response
-  });
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching data from OpenCage API' });
+  }
 });
 
-// Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
