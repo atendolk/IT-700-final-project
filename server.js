@@ -14,10 +14,10 @@ const API_KEY = 'c9567156fd4b439a9e09a9ca8197f360'; // OpenCage API Key
 
 // MySQL database connection
 const db = mysql.createConnection({
-  host: 'localhost', // Change to your database host
-  user: 'root',      // Your database username
-  password: 'Mataji12apt!',      // Your database password
-  database: 'addiction_treatment', // Your database name
+  host: 'localhost',
+  user: 'root',
+  password: 'Mataji12apt!',
+  database: 'addiction_treatment',
 });
 
 // Connect to the database
@@ -31,7 +31,7 @@ db.connect((err) => {
 
 // Endpoint to get treatment centers
 app.get('/treatment-centers', (req, res) => {
-  const query = 'SELECT * FROM treatment_centers';
+  const query = 'SELECT id, name, address, contact, lat, lng FROM treatment_centers';
   db.query(query, (err, results) => {
     if (err) {
       console.error('Error fetching treatment centers:', err);
